@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { Mail, MessageCircle, Phone } from "lucide-react";
-import { cn } from "@/lib/utils"; // If you don't have this, remove it or create the file
+import clsx from "clsx";
+
+ // If you don't have this, remove it or create the file
 
 export type FounderCardProps = {
   name: string;
