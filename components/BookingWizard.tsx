@@ -8,14 +8,14 @@ import { ServiceCard, type Service } from "@/components/ServiceCard";
 /**
  * ✅ Draft changes:
  * - supports multi-service bookings via serviceIds[]
- * - keeps legacy serviceId/serviceName for backward compatibility and older drafts
+ * - keeps legacy serviceId/serviceName for backward compatibility in drafts ONLY (NOT DB)
  */
 type Draft = {
   // NEW (multi-service)
   serviceIds?: string[];
   serviceNames?: string[];
 
-  // Legacy (keep for old drafts + backward-compat column)
+  // Legacy (keep for old drafts only; do NOT persist to DB)
   serviceId?: string;
   serviceName?: string;
 
@@ -33,7 +33,7 @@ type Draft = {
 
 const KEY = "nursecare_booking_draft_v1";
 
-// Active statuses block slots (and are enforced by DB unique partial index)
+// Active statuses block slots (and are enforced by DB unique partial index if you have it)
 const ACTIVE_STATUSES = ["pending", "confirmed", "in_progress"] as const;
 
 function readDraft(): Draft {
@@ -73,7 +73,6 @@ function fromMinutes(mins: number) {
 }
 
 function normalizeTimeHHMM(t: string) {
-  // handles "HH:MM" and "HH:MM:SS"
   const parts = t.split(":");
   if (parts.length >= 2) return `${parts[0].padStart(2, "0")}:${parts[1].padStart(2, "0")}`;
   return t;
@@ -85,7 +84,7 @@ function isUniqueViolation(err: any) {
   return code === "23505" || /duplicate key value|unique constraint/i.test(err?.message ?? "");
 }
 
-// ✅ Currency formatter: replace peso usage with XAF everywhere we display money
+// ✅ Currency formatter: XAF everywhere
 function fmtXAFfromCents(cents: number) {
   const amount = Math.round((Number(cents) || 0) / 100);
   try {
@@ -95,7 +94,6 @@ function fmtXAFfromCents(cents: number) {
       maximumFractionDigits: 0,
     }).format(amount);
   } catch {
-    // ultra-defensive fallback if Intl/currency is weird on some environments
     return `XAF ${amount.toLocaleString()}`;
   }
 }
@@ -104,126 +102,120 @@ function fmtXAFfromCents(cents: number) {
 function PopSuccess({ show }: { show: boolean }) {
   if (!show) return null;
   return (
-    <div
-      aria-live="polite"
-      className="fixed inset-0 z-[60] grid place-items-center bg-black/20 backdrop-blur-[2px]"
-    >
+    <div aria-live="polite" className="fixed inset-0 z-[60] grid place-items-center bg-black/20 backdrop-blur-[2px]">
       <div className="relative w-[92%] max-w-sm rounded-3xl bg-white p-6 text-center shadow-xl ring-1 ring-slate-200 pop-card">
         <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-ink-50 ring-1 ring-ink-200 pop-bounce">
           <span className="text-xl">🎉</span>
         </div>
         <div className="mt-3 text-lg font-semibold text-slate-900">Booked!</div>
-        <div className="mt-1 text-sm text-slate-600">
-          Your request is in. We’re doing a happy little paperwork dance.
-        </div>
+        <div className="mt-1 text-sm text-slate-600">Your request is in. We’re doing a happy little paperwork dance.</div>
 
-        {/* confetti bits */}
         <span className="confetti c1" aria-hidden />
         <span className="confetti c2" aria-hidden />
         <span className="confetti c3" aria-hidden />
         <span className="confetti c4" aria-hidden />
         <span className="confetti c5" aria-hidden />
         <span className="confetti c6" aria-hidden />
-      </div>
 
-      <style jsx>{`
-        .pop-card {
-          animation: pop-in 420ms cubic-bezier(0.2, 1.4, 0.2, 1);
-        }
-        .pop-bounce {
-          animation: bounce 650ms cubic-bezier(0.2, 1.4, 0.2, 1);
-        }
-        @keyframes pop-in {
-          0% {
-            transform: scale(0.86);
+        <style jsx>{`
+          .pop-card {
+            animation: pop-in 420ms cubic-bezier(0.2, 1.4, 0.2, 1);
+          }
+          .pop-bounce {
+            animation: bounce 650ms cubic-bezier(0.2, 1.4, 0.2, 1);
+          }
+          @keyframes pop-in {
+            0% {
+              transform: scale(0.86);
+              opacity: 0;
+            }
+            60% {
+              transform: scale(1.04);
+              opacity: 1;
+            }
+            100% {
+              transform: scale(1);
+            }
+          }
+          @keyframes bounce {
+            0% {
+              transform: translateY(0) scale(1);
+            }
+            35% {
+              transform: translateY(-6px) scale(1.06);
+            }
+            70% {
+              transform: translateY(0) scale(1);
+            }
+            100% {
+              transform: translateY(-1px) scale(1.01);
+            }
+          }
+          .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            border-radius: 3px;
             opacity: 0;
+            animation: confetti 900ms ease-out forwards;
           }
-          60% {
-            transform: scale(1.04);
-            opacity: 1;
+          .c1 {
+            left: 14%;
+            top: 18%;
+            background: #f59e0b;
+            transform: rotate(20deg);
+            animation-delay: 60ms;
           }
-          100% {
-            transform: scale(1);
+          .c2 {
+            left: 28%;
+            top: 10%;
+            background: #22c55e;
+            transform: rotate(55deg);
+            animation-delay: 120ms;
           }
-        }
-        @keyframes bounce {
-          0% {
-            transform: translateY(0) scale(1);
+          .c3 {
+            right: 22%;
+            top: 12%;
+            background: #3b82f6;
+            transform: rotate(15deg);
+            animation-delay: 90ms;
           }
-          35% {
-            transform: translateY(-6px) scale(1.06);
+          .c4 {
+            right: 12%;
+            top: 24%;
+            background: #ef4444;
+            transform: rotate(35deg);
+            animation-delay: 160ms;
           }
-          70% {
-            transform: translateY(0) scale(1);
+          .c5 {
+            left: 18%;
+            bottom: 18%;
+            background: #a855f7;
+            transform: rotate(25deg);
+            animation-delay: 140ms;
           }
-          100% {
-            transform: translateY(-1px) scale(1.01);
+          .c6 {
+            right: 18%;
+            bottom: 16%;
+            background: #06b6d4;
+            transform: rotate(65deg);
+            animation-delay: 200ms;
           }
-        }
-        .confetti {
-          position: absolute;
-          width: 10px;
-          height: 10px;
-          border-radius: 3px;
-          opacity: 0;
-          animation: confetti 900ms ease-out forwards;
-        }
-        .c1 {
-          left: 14%;
-          top: 18%;
-          background: #f59e0b;
-          transform: rotate(20deg);
-          animation-delay: 60ms;
-        }
-        .c2 {
-          left: 28%;
-          top: 10%;
-          background: #22c55e;
-          transform: rotate(55deg);
-          animation-delay: 120ms;
-        }
-        .c3 {
-          right: 22%;
-          top: 12%;
-          background: #3b82f6;
-          transform: rotate(15deg);
-          animation-delay: 90ms;
-        }
-        .c4 {
-          right: 12%;
-          top: 24%;
-          background: #ef4444;
-          transform: rotate(35deg);
-          animation-delay: 160ms;
-        }
-        .c5 {
-          left: 18%;
-          bottom: 18%;
-          background: #a855f7;
-          transform: rotate(25deg);
-          animation-delay: 140ms;
-        }
-        .c6 {
-          right: 18%;
-          bottom: 16%;
-          background: #06b6d4;
-          transform: rotate(65deg);
-          animation-delay: 200ms;
-        }
-        @keyframes confetti {
-          0% {
-            opacity: 0;
-            transform: translateY(8px) scale(0.7);
+          @keyframes confetti {
+            0% {
+              opacity: 0;
+              transform: translateY(8px) scale(0.7);
+            }
+            30% {
+              opacity: 1;
+            }
+            100% {
+              opacity: 0;
+              transform: translateY(-22px) scale(1.05);
+            }
           }
-          30% {
-            opacity: 1;
-          }
-          100% {
-            opacity: 0;
-            transform: translateY(-22px) scale(1.05);
-          }
-        }
-      `}</style>
+        `}</style>
+      </div>
     </div>
   );
 }
@@ -235,38 +227,30 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
   const [draft, setDraft] = useState<Draft>({});
   const [services, setServices] = useState<Service[]>([]);
   const [blockedDates, setBlockedDates] = useState<Set<string>>(new Set());
-  const [availability, setAvailability] = useState<
-    Array<{ day_of_week: number; start_time: string; end_time: string }>
-  >([]);
+  const [availability, setAvailability] = useState<Array<{ day_of_week: number; start_time: string; end_time: string }>>(
+    []
+  );
 
-  // NEW: slot interval (from public_settings if available)
+  // slot interval (from public_settings if available)
   const [slotInterval, setSlotInterval] = useState<number>(30);
 
-  // NEW: booked times for selected date (active statuses only)
+  // booked times for selected date (active statuses only)
   const [bookedTimes, setBookedTimes] = useState<Set<string>>(new Set());
 
   const [submitting, setSubmitting] = useState(false);
-
-  // NEW: gentle messaging for auto-clears / slot invalidation
   const [notice, setNotice] = useState<string | null>(null);
-
-  // ✅ NEW: success pop animation trigger
   const [showPop, setShowPop] = useState(false);
 
   // --- Draft boot + upgrade old schema (serviceId -> serviceIds)
   useEffect(() => {
     const d = readDraft();
-
-    // upgrade older drafts safely
     const upgraded: Draft = { ...d };
 
-    // If old draft had single serviceId but no serviceIds, promote it
     if ((!upgraded.serviceIds || upgraded.serviceIds.length === 0) && upgraded.serviceId) {
       upgraded.serviceIds = [upgraded.serviceId];
       if (upgraded.serviceName) upgraded.serviceNames = [upgraded.serviceName];
     }
 
-    // Ensure arrays exist (but don't force if empty)
     if (upgraded.serviceIds && !Array.isArray(upgraded.serviceIds)) upgraded.serviceIds = [];
     if (upgraded.serviceNames && !Array.isArray(upgraded.serviceNames)) upgraded.serviceNames = [];
 
@@ -277,7 +261,6 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
   // --- Public data needed across steps
   useEffect(() => {
     (async () => {
-      // services (minimal columns requested + safe: ServiceCard may expect more, so include common fields)
       const { data: svcs } = await supabase
         .from("services")
         .select("id,name,description,price_cents,duration_mins,is_active")
@@ -296,11 +279,8 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
 
       setAvailability((avail ?? []) as any);
 
-      // slot interval from public_settings if it exists (fallback 30)
-      // NOTE: if your table/key differs, adjust select below. This is intentionally defensive.
       try {
         const { data: ps, error: psErr } = await supabase.from("public_settings").select("slot_interval_minutes").maybeSingle();
-
         if (!psErr) {
           const v = Number((ps as any)?.slot_interval_minutes);
           if (Number.isFinite(v) && v > 0) setSlotInterval(v);
@@ -320,14 +300,14 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
   }
 
   const selectedServiceIds = draft.serviceIds ?? [];
+
   const selectedServices = useMemo(() => {
     if (!selectedServiceIds.length) return [];
     const map = new Map(services.map((s) => [s.id, s]));
     return selectedServiceIds.map((id) => map.get(id)).filter(Boolean) as Service[];
   }, [selectedServiceIds, services]);
 
-  // For backward compatibility:
-  // - appointments.service_id will be set to "first selected service"
+  // UI-only fallback for older drafts or if services list hasn't loaded yet
   const primaryService = selectedServices[0] ?? services.find((s) => s.id === draft.serviceId);
 
   const totalDurationMins = useMemo(() => {
@@ -335,7 +315,6 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
     return sum > 0 ? sum : (primaryService?.duration_mins ?? 0);
   }, [selectedServices, primaryService]);
 
-  // ✅ Total price in cents (multi-service sum, fallback to primary)
   const totalPriceCents = useMemo(() => {
     const sum = selectedServices.reduce((acc, s: any) => acc + (Number(s.price_cents) || 0), 0);
     if (sum > 0) return sum;
@@ -367,10 +346,13 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
     }
 
     (async () => {
-      const { data, error } = await supabase.from("appointments").select("time,status").eq("date", draft.date).in("status", [...ACTIVE_STATUSES]);
+      const { data, error } = await supabase
+        .from("appointments")
+        .select("time,status")
+        .eq("date", draft.date)
+        .in("status", [...ACTIVE_STATUSES]);
 
       if (error) {
-        // If this fails, don't block UI, just assume empty.
         setBookedTimes(new Set());
         return;
       }
@@ -384,11 +366,6 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
     })();
   }, [draft.date, supabase]);
 
-  // --- Compute time options with:
-  // 1) availability windows
-  // 2) slot interval
-  // 3) multi-service total duration requires consecutive free slots
-  // 4) remove booked times for active statuses
   const timeOptions = useMemo(() => {
     if (!draft.date) return [];
 
@@ -398,24 +375,19 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
     if (!todays.length) return [];
 
     const interval = slotInterval || 30;
-
-    // How many discrete slots do we need?
     const requiredSlots = Math.max(1, Math.ceil((totalDurationMins || interval) / interval));
 
-    // Generate possible start times within each availability window
     const candidates: string[] = [];
 
     for (const a of todays) {
       const start = toMinutes(normalizeTimeHHMM(a.start_time));
       const end = toMinutes(normalizeTimeHHMM(a.end_time));
 
-      // startTime + requiredSlots * interval <= end
       for (let cur = start; cur + requiredSlots * interval <= end; cur += interval) {
         candidates.push(fromMinutes(cur));
       }
     }
 
-    // Validate candidates by checking all consecutive slots are free
     const ok: string[] = [];
     const booked = bookedTimes;
 
@@ -437,7 +409,6 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
     return Array.from(new Set(ok)).sort();
   }, [draft.date, availability, slotInterval, totalDurationMins, bookedTimes]);
 
-  // --- Auto-clear an invalid selected time when constraints change (services/date/availability/booked)
   useEffect(() => {
     if (!draft.time) return;
     if (!draft.date) return;
@@ -475,6 +446,7 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
     const nextIds = Array.from(ids);
     const nextNames = nextIds.map((id) => names.get(id) ?? services.find((x) => x.id === id)?.name ?? "");
 
+    // Keep legacy fields ONLY for draft compatibility (UI). Not used in DB.
     const primaryId = nextIds[0];
     const primaryName = services.find((x) => x.id === primaryId)?.name;
 
@@ -488,7 +460,11 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
 
   async function refreshBookedTimesForSelectedDate() {
     if (!draft.date) return;
-    const { data, error } = await supabase.from("appointments").select("time,status").eq("date", draft.date).in("status", [...ACTIVE_STATUSES]);
+    const { data, error } = await supabase
+      .from("appointments")
+      .select("time,status")
+      .eq("date", draft.date)
+      .in("status", [...ACTIVE_STATUSES]);
 
     if (error) return;
     const times = new Set<string>();
@@ -498,8 +474,8 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
     setBookedTimes(times);
   }
 
+  // ✅ FINAL: booking uses RPC (single transaction)
   async function confirmBooking() {
-    // ✅ block double-submits
     if (submitting || draft.submitted) return;
 
     const svcIds = draft.serviceIds ?? (draft.serviceId ? [draft.serviceId] : []);
@@ -508,22 +484,15 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
     setSubmitting(true);
     setNotice(null);
 
-    // Back-compat: appointments.service_id is the first selected service
-    const primaryId = svcIds[0];
-
-    const payload = {
-      service_id: primaryId,
-      date: draft.date,
-      time: draft.time,
-      status: "pending",
-      full_name: draft.fullName,
-      phone: draft.phone,
-      email: draft.email ?? null,
-      address: draft.address ?? null,
-    };
-
-    // Step 1: insert appointment
-    const { data: appt, error: apptErr } = await supabase.from("appointments").insert(payload).select("id").single();
+    const { data: appointmentId, error: apptErr } = await supabase.rpc("create_appointment_with_services", {
+      p_date: draft.date,
+      p_time: draft.time,
+      p_full_name: draft.fullName,
+      p_phone: draft.phone,
+      p_service_ids: svcIds,
+      p_email: draft.email ?? null,
+      p_address: draft.address ?? null,
+    });
 
     if (apptErr) {
       if (isUniqueViolation(apptErr)) {
@@ -539,48 +508,29 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
       return;
     }
 
-    // Step 2: insert appointment_services rows (many-to-many)
-    const appointmentId = appt.id as string;
+    const createdId = String(appointmentId);
 
-    const rows = svcIds.map((service_id) => ({
-      appointment_id: appointmentId,
-      service_id,
-    }));
-
-    const { error: linkErr } = await supabase.from("appointment_services").insert(rows);
-
-    if (linkErr) {
-      await supabase.from("appointments").delete().eq("id", appointmentId);
-      alert("Booking failed while attaching services. Please try again.");
-      setSubmitting(false);
-      return;
-    }
-
-    // ✅ mark as submitted immediately so button stays inactive even if user refreshes
     updateDraft({ submitted: true, submittedAt: new Date().toISOString() });
 
-    // ✅ pop animation (fun + quick)
     setShowPop(true);
     window.setTimeout(() => setShowPop(false), 950);
 
-    // Fire-and-forget email webhook (optional)
     const hook = process.env.NEXT_PUBLIC_EMAIL_WEBHOOK_URL;
     if (hook) {
       try {
         const names =
           selectedServices.length > 0
             ? selectedServices.map((s) => s.name)
-            : draft.serviceNames?.filter(Boolean) ?? [primaryService?.name ?? draft.serviceName ?? ""];
+            : draft.serviceNames?.filter(Boolean) ?? [];
 
         await fetch(hook, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             type: "booking_confirmed",
-            appointmentId,
-            serviceNames: names,
+            appointmentId: createdId,
+            serviceNames: names.length ? names : ["Service"],
             totalDurationMins,
-            // ✅ include price in XAF too (useful for admin emails/receipts)
             totalPriceXAF,
             totalPriceCents,
             date: draft.date,
@@ -624,12 +574,7 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
 
         <div className="grid gap-3">
           {services.map((s) => (
-            <ServiceCard
-              key={s.id}
-              service={s}
-              selected={selectedServiceIds.includes(s.id)}
-              onSelect={() => toggleService(s)}
-            />
+            <ServiceCard key={s.id} service={s} selected={selectedServiceIds.includes(s.id)} onSelect={() => toggleService(s)} />
           ))}
         </div>
 
@@ -637,7 +582,12 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
           <button className="btn-ghost w-full" type="button" onClick={() => go("/")}>
             Back
           </button>
-          <button className="btn-primary w-full" type="button" disabled={selectedCount < 1} onClick={() => go("/booking/step-2-date")}>
+          <button
+            className="btn-primary w-full"
+            type="button"
+            disabled={selectedCount < 1}
+            onClick={() => go("/booking/step-2-date")}
+          >
             Next
           </button>
         </div>
@@ -690,7 +640,6 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
         <div className="card p-5">
           <div className="text-lg font-semibold">Select Time</div>
           <div className="mt-2 text-sm text-slate-600">Available slots based on your nurse schedule.</div>
-
           <div className="mt-2 text-xs text-slate-600">Slots account for your selected services duration.</div>
 
           {notice ? (
@@ -744,19 +693,39 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
         <div className="card p-5 space-y-3">
           <div>
             <label className="text-xs font-medium text-slate-600">Full Name</label>
-            <input className="input mt-1" value={draft.fullName ?? ""} onChange={(e) => updateDraft({ fullName: e.target.value })} placeholder="Juan Dela Cruz" />
+            <input
+              className="input mt-1"
+              value={draft.fullName ?? ""}
+              onChange={(e) => updateDraft({ fullName: e.target.value })}
+              placeholder="Juan Dela Cruz"
+            />
           </div>
           <div>
             <label className="text-xs font-medium text-slate-600">Phone</label>
-            <input className="input mt-1" value={draft.phone ?? ""} onChange={(e) => updateDraft({ phone: e.target.value })} placeholder="+63..." />
+            <input
+              className="input mt-1"
+              value={draft.phone ?? ""}
+              onChange={(e) => updateDraft({ phone: e.target.value })}
+              placeholder="+63..."
+            />
           </div>
           <div>
             <label className="text-xs font-medium text-slate-600">Email (optional)</label>
-            <input className="input mt-1" value={draft.email ?? ""} onChange={(e) => updateDraft({ email: e.target.value })} placeholder="you@example.com" />
+            <input
+              className="input mt-1"
+              value={draft.email ?? ""}
+              onChange={(e) => updateDraft({ email: e.target.value })}
+              placeholder="you@example.com"
+            />
           </div>
           <div>
             <label className="text-xs font-medium text-slate-600">Address (optional)</label>
-            <textarea className="input mt-1 min-h-20" value={draft.address ?? ""} onChange={(e) => updateDraft({ address: e.target.value })} placeholder="Unit / Street / Barangay / City" />
+            <textarea
+              className="input mt-1 min-h-20"
+              value={draft.address ?? ""}
+              onChange={(e) => updateDraft({ address: e.target.value })}
+              placeholder="Unit / Street / Barangay / City"
+            />
           </div>
         </div>
 
@@ -764,7 +733,12 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
           <button className="btn-ghost w-full" type="button" onClick={() => go("/booking/step-3-time")}>
             Back
           </button>
-          <button className="btn-primary w-full" type="button" disabled={!draft.fullName || !draft.phone} onClick={() => go("/booking/step-5-confirmation")}>
+          <button
+            className="btn-primary w-full"
+            type="button"
+            disabled={!draft.fullName || !draft.phone}
+            onClick={() => go("/booking/step-5-confirmation")}
+          >
             Confirm
           </button>
         </div>
@@ -781,7 +755,6 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
 
   return (
     <div className="space-y-4">
-      {/* ✅ success pop overlay */}
       <PopSuccess show={showPop} />
 
       <div className="card p-5">
@@ -831,7 +804,6 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
             <span className="font-medium">{totalDurationMins ? `${totalDurationMins} mins` : "—"}</span>
           </div>
 
-          {/* ✅ Currency updated to XAF */}
           <div className="flex items-center justify-between">
             <span className="text-slate-600">Total Price</span>
             <span className="font-medium">{totalPriceXAF}</span>
@@ -874,7 +846,6 @@ export function BookingWizard({ step }: { step: 1 | 2 | 3 | 4 | 5 }) {
         className="btn-ghost w-full"
         type="button"
         onClick={() => {
-          // ✅ reset draft when leaving, so next booking is fresh
           sessionStorage.removeItem(KEY);
           go("/");
         }}
