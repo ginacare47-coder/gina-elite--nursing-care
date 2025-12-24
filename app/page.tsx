@@ -76,6 +76,7 @@ function StatCard({ label, value }: { label: string; value: string }) {
  * - Gradient tint only
  * - Subject fully clean
  * - CTA contrast preserved
+ * - Mobile-optimized tap targets (48px+ height)
  */
 function Hero({
   title,
@@ -122,12 +123,12 @@ function Hero({
 
         {/* Readability gradients ONLY (no blur) */}
         <div className="pointer-events-none absolute inset-0">
-          {/* Left-side tint fade (for headline + CTA readability) */}
+          {/* Left-side tint fade (enhanced coverage for mobile readability) */}
           <div
             className="absolute inset-0"
             style={{
               background:
-                "linear-gradient(to right, rgba(242,251,255,0.92) 0%, rgba(242,251,255,0.55) 42%, rgba(242,251,255,0.0) 72%)",
+                "linear-gradient(to right, rgba(242,251,255,0.95) 0%, rgba(242,251,255,0.65) 45%, rgba(242,251,255,0.0) 75%)",
             }}
           />
 
@@ -147,12 +148,12 @@ function Hero({
         {/* Content */}
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex min-h-[560px] sm:min-h-[620px] lg:min-h-[640px] items-center">
-            <div className="max-w-xl">
-              <div className="text-xs font-semibold tracking-wide text-ink-700/80">
+            <div className="w-full max-w-xl">
+              <div className="text-xs font-semibold tracking-wide text-ink-700/80 uppercase">
                 Caring Nurse Services
               </div>
 
-              <h1 className="mt-3 text-4xl font-semibold leading-tight tracking-tight text-slate-900 sm:text-5xl">
+              <h1 className="mt-3 text-[2rem] font-semibold leading-[1.15] tracking-tight text-slate-900 sm:text-5xl sm:leading-tight">
                 <span className="block">Personal Healthcare</span>
                 <span className="block">at Your Home</span>
               </h1>
@@ -160,34 +161,39 @@ function Hero({
               {/* Keep dynamic content but preserve your designed wrap */}
               <p className="sr-only">{title}</p>
 
-              <p className="mt-4 max-w-md text-sm sm:text-base leading-relaxed text-slate-600">
+              <p className="mt-5 max-w-md text-[0.9375rem] leading-[1.6] text-slate-600 sm:text-base sm:leading-relaxed">
                 {subtitle}
               </p>
 
-              <div className="mt-7 flex flex-wrap items-center gap-3 sm:gap-4">
+              {/* Mobile: Full-width stacked. Desktop: Inline flex */}
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
                 <Link
                   href="/booking/step-1-service"
-                  className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold bg-ink-700 text-white hover:bg-ink-800 shadow-soft ring-1 ring-ink-900/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white/40"
+                  aria-label="Book a nurse home visit"
+                  className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-base font-semibold bg-ink-700 text-white hover:bg-ink-800 shadow-soft ring-1 ring-ink-900/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-white/40 transition-colors min-h-[48px] sm:min-h-0"
                 >
                   {cta}
                 </Link>
 
                 <a
                   href="#how"
-                  className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-semibold bg-white/80 text-ink-800 hover:bg-white/95 ring-1 ring-slate-200/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white/40"
+                  aria-label="Learn how our service works"
+                  className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-base font-semibold bg-white/80 text-ink-800 hover:bg-white/95 ring-1 ring-slate-200/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white/40 transition-colors min-h-[48px] sm:min-h-0"
                 >
                   How it works
                 </a>
 
+                {/* Admin Portal: Proper button on mobile, subtle link on desktop */}
                 <Link
-                  href="/admin/login"
-                  className="inline-flex items-center justify-center rounded-xl px-2 py-2 text-sm font-semibold text-slate-600 hover:text-slate-900"
+                  href="/admin/login?next=%2Fadmin%2Fdashboard"
+                  aria-label="Access admin portal"
+                  className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-base font-semibold bg-slate-100/90 text-slate-700 hover:bg-slate-200/90 ring-1 ring-slate-300/50 sm:bg-transparent sm:text-slate-600 sm:hover:text-slate-900 sm:ring-0 sm:px-2 sm:py-2 sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white/40 transition-colors min-h-[48px] sm:min-h-0"
                 >
                   Admin Portal
                 </Link>
               </div>
 
-              <p className="mt-4 text-xs text-slate-500">
+              <p className="mt-5 text-xs leading-relaxed text-slate-500">
                 Licensed professionals • Privacy-first booking • Home-based care
               </p>
             </div>
@@ -281,7 +287,7 @@ export default async function HomePage() {
               {/* ✅ UPDATED SERVICES SECTION: name + price in XAF, link to booking */}
               {servicesError ? (
                 <div className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-sm text-rose-700">
-                  Couldn’t load services: {servicesError.message}
+                  Couldn't load services: {servicesError.message}
                 </div>
               ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
