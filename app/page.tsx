@@ -72,10 +72,10 @@ function StatCard({ label, value }: { label: string; value: string }) {
 
 /**
  * Hero:
- * - No blur anywhere
- * - Gradient tint only
+ * - NO gradients
+ * - NO blur
  * - Subject fully clean
- * - CTA contrast preserved
+ * - Text-only contrast tuning
  * - Mobile-optimized tap targets (48px+ height)
  */
 function Hero({
@@ -121,39 +121,18 @@ function Hero({
           />
         </div>
 
-        {/* Readability gradients ONLY (no blur) */}
-        <div className="pointer-events-none absolute inset-0">
-          {/* Left-side tint fade (enhanced coverage for mobile readability) */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "linear-gradient(to right, rgba(242,251,255,0.95) 0%, rgba(242,251,255,0.65) 45%, rgba(242,251,255,0.0) 75%)",
-            }}
-          />
-
-          {/* Soft highlight behind headline (subtle premium lift) */}
-          <div
-            className="absolute inset-0"
-            style={{
-              background:
-                "radial-gradient(900px 520px at 22% 28%, rgba(255,255,255,0.45), transparent 62%)",
-            }}
-          />
-
-          {/* Tiny edge calming */}
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-black/5" />
-        </div>
-
         {/* Content */}
         <div className="relative mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex min-h-[560px] sm:min-h-[620px] lg:min-h-[640px] items-center">
             <div className="w-full max-w-xl">
-              <div className="text-xs font-semibold tracking-wide text-ink-700/80 uppercase">
-                Caring Nurse Services
+              <div className="text-xs font-semibold tracking-wide text-ink-800 uppercase">
+                Gina elite nursing services
               </div>
 
-              <h1 className="mt-3 text-[2rem] font-semibold leading-[1.15] tracking-tight text-slate-900 sm:text-5xl sm:leading-tight">
+              <h1
+                className="mt-3 text-[2rem] font-semibold leading-[1.15] tracking-tight text-slate-900 sm:text-5xl sm:leading-tight"
+                style={{ textShadow: "0 1px 2px rgba(0,0,0,0.18)" }}
+              >
                 <span className="block">Personal Healthcare</span>
                 <span className="block">at Your Home</span>
               </h1>
@@ -161,12 +140,12 @@ function Hero({
               {/* Keep dynamic content but preserve your designed wrap */}
               <p className="sr-only">{title}</p>
 
-              <p className="mt-5 max-w-md text-[0.9375rem] leading-[1.6] text-slate-600 sm:text-base sm:leading-relaxed">
+              <p className="mt-5 max-w-md text-[0.9375rem] leading-[1.6] text-slate-700 sm:text-base sm:leading-relaxed">
                 {subtitle}
               </p>
 
-              {/* Mobile: Full-width stacked. Desktop: Inline flex */}
-              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
+              {/* Mobile: Full-width stacked. Wide phones: 2-up buttons. Desktop: inline */}
+              <div className="mt-8 grid gap-3 min-[420px]:grid-cols-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:gap-4">
                 <Link
                   href="/booking/step-1-service"
                   aria-label="Book a nurse home visit"
@@ -183,11 +162,11 @@ function Hero({
                   How it works
                 </a>
 
-                {/* Admin Portal: Proper button on mobile, subtle link on desktop */}
+                {/* Admin Portal: full-width on small phones, consistent and tappable */}
                 <Link
                   href="/admin/login?next=%2Fadmin%2Fdashboard"
                   aria-label="Access admin portal"
-                  className="inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-base font-semibold bg-slate-100/90 text-slate-700 hover:bg-slate-200/90 ring-1 ring-slate-300/50 sm:bg-transparent sm:text-slate-600 sm:hover:text-slate-900 sm:ring-0 sm:px-2 sm:py-2 sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white/40 transition-colors min-h-[48px] sm:min-h-0"
+                  className="min-[420px]:col-span-2 inline-flex items-center justify-center rounded-xl px-6 py-3.5 text-base font-semibold bg-slate-100/90 text-slate-700 hover:bg-slate-200/90 ring-1 ring-slate-300/50 sm:bg-transparent sm:text-slate-600 sm:hover:text-slate-900 sm:ring-0 sm:px-2 sm:py-2 sm:text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink-400/50 focus-visible:ring-offset-2 focus-visible:ring-offset-white/40 transition-colors min-h-[48px] sm:min-h-0"
                 >
                   Admin Portal
                 </Link>
@@ -238,9 +217,10 @@ export default async function HomePage() {
       </div>
 
       <main className="relative mx-auto w-full max-w-screen-xl px-4 sm:px-6 lg:px-8 py-8 pb-24 sm:pb-10">
-        <div className="grid gap-10 lg:grid-cols-12 lg:gap-12">
+        {/* ✅ Cameroon-first: 1-col on most phones, 2-col only on wide phones/tablets (600px+) */}
+        <div className="grid gap-10 min-[600px]:grid-cols-12 min-[600px]:gap-12">
           {/* Left */}
-          <div className="lg:col-span-5">
+          <div className="min-[600px]:col-span-5 min-[600px]:min-w-[340px]">
             <Hero title={title} subtitle={subtitle} cta={cta} />
 
             <div className="mt-8 space-y-5">
@@ -264,19 +244,19 @@ export default async function HomePage() {
               </div>
 
               <FounderCard
-                name="Gina Care"
+                name="Geraldine mulango bau"
                 title="Founder & Head Nurse"
                 blurb="Have questions about our services? Reach out directly for personalized assistance."
                 email="ginacare47@gmail.com"
-                phone="+639123456789"
-                whatsapp="+639123456789"
+                phone="+237653584827"
+                whatsapp="+237653584827"
                 className="mt-2"
               />
             </div>
           </div>
 
           {/* Right */}
-          <div className="lg:col-span-7 space-y-10 lg:space-y-12">
+          <div className="min-[600px]:col-span-7 space-y-10 min-[600px]:space-y-12">
             <section>
               <SectionHeading
                 eyebrow="Our Services"
@@ -295,9 +275,7 @@ export default async function HomePage() {
                     safeServices.map((service) => (
                       <Link
                         key={service.id}
-                        href={`/booking/step-1-service?service=${encodeURIComponent(
-                          service.id
-                        )}`}
+                        href={`/booking/step-1-service?service=${encodeURIComponent(service.id)}`}
                         className="card p-6 transition-all hover:ring-2 hover:ring-ink-300"
                       >
                         <div className="flex items-center justify-between gap-4">
@@ -380,7 +358,10 @@ export default async function HomePage() {
                 <Link href="/booking/step-1-service" className="btn-primary w-full">
                   Begin Your Booking
                 </Link>
-                <Link href="/admin/login" className="btn-ghost w-full text-slate-700">
+                <Link
+                  href="/admin/login?next=%2Fadmin%2Fdashboard"
+                  className="btn-ghost w-full text-slate-700"
+                >
                   Provider Login
                 </Link>
               </div>
@@ -390,7 +371,7 @@ export default async function HomePage() {
 
         <footer className="mt-12 border-t border-slate-200 pt-8 text-center">
           <p className="text-sm text-slate-500">
-            © {new Date().getFullYear()} Nurse Home Care. Built with Next.js + Supabase.
+            © {new Date().getFullYear()} Nurse Home Care. Built by MPG Technoligies
             <span className="mx-2">•</span>
             Privacy-first
             <span className="mx-2">•</span>
